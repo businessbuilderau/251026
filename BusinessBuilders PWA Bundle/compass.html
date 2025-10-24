@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Compass - $49 Upgrade</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --icon-blue: #3498db;
+            --primary-dark: #2c3e50;
+            --light-gray-text: #7f8c8d;
+            --border-color: #e5e7eb;
+            --page-bg: #f9fafb;
+            --white: #ffffff;
+            --danger-red: #ef4444;
+            --btn-startup: #2563eb;
+            --btn-secondary-bg: #6c757d;
+        }
+
+        @keyframes flash-background { 0% { background-color: #dbeafe; } 100% { background-color: #f3f4f6; } }
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--page-bg);
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .app-container { padding: 1.5rem; }
+
+        .customer-compass-app {
+            max-width: 1200px;
+            margin: auto;
+            background-color: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07);
+        }
+
+        /* --- Onboarding Modal --- */
+        #industry-selector-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        .modal-content {
+            background-color: var(--white);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .modal-content .cc-logo {
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .modal-content .cc-logo-title {
+            font-size: 24px;
+        }
+        .modal-content .cc-icon-bar { height: 40px; }
+        .modal-content .cc-icon-block { width: 20px; height: 11px; }
+
+        .modal-content h1 {
+            margin-top: 0;
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+        }
+        .positioning-statement {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--light-gray-text);
+            margin: 1.5rem 0;
+        }
+        #industry-select {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+        #start-mapping-btn {
+            width: 100%;
+            font-size: 1.1rem;
+        }
+
+        /* --- Sticky Header Layout --- */
+        #sticky-top-bar {
+            position: sticky;
+            top: 0;
+            background-color: var(--white);
+            z-index: 100;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .sticky-header-layout {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: space-between;
+        }
+
+        .header-main-content {
+            flex-grow: 1;
+        }
+        
+        .cc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+        }
+        .cc-logo { display: flex; align-items: center; gap: 1rem; }
+        .cc-logo-icon { display: flex; gap: 0.5rem; align-items: center; }
+        .cc-icon-bar { width: 4px; height: 40px; background-color: var(--primary-dark); }
+        .cc-icon-blocks { display: flex; flex-direction: column; gap: 4px; }
+        .cc-icon-block { width: 20px; height: 11px; background-color: var(--icon-blue); }
+        .cc-logo-title { font-size: 24px; font-weight: 800; color: var(--primary-dark); margin: 0; }
+        
+        .cc-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;}
+        .cc-persona-name { font-size: 1rem; color: var(--light-gray-text); font-weight: 500; }
+        .cc-toolbar-actions { display: flex; gap: 1rem; align-items: center; }
+        .cc-btn { border: 1px solid var(--border-color); background-color: #fff; padding: 0.5rem 1rem; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .cc-btn:hover:not(:disabled) { opacity: 0.9; }
+        .btn-primary { background-color: var(--btn-startup); color: #fff; border-color: var(--btn-startup); }
+        .btn-secondary { background-color: var(--btn-secondary-bg); color: #fff; border-color: var(--btn-secondary-bg); }
+        .cc-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; border-color: #d1d5db;}
+
+        .cc-progress-bar-container { width: 100%; background-color: var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 0.5rem; }
+        .cc-progress-bar { height: 8px; width: 0%; background-color: var(--icon-blue); transition: width 0.4s ease-in-out; }
+        .cc-progress-text { font-size: 0.9rem; color: var(--light-gray-text); text-align: center; }
+
+        /* --- Main Content --- */
+        .cc-main-content { padding: 1.5rem; }
+        .cc-canvas { flex-grow: 1; }
+        
+        .cc-quadrant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; transition: opacity 0.5s; }
+        
+        /* --- Card Section --- */
+        .cc-section { background-color: var(--page-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; }
+        .cc-section h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
+        .cc-section .guiding-question { font-size: 0.9rem; color: var(--light-gray-text); margin: 0 0 1rem 0; }
+        
+        .shadow-text-card {
+            background-color: var(--white);
+            border: 1px dashed var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            color: var(--light-gray-text);
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .shadow-text-card:hover {
+            background-color: #fdfdfe;
+            border-color: #d1d5db;
+        }
+
+        .cc-section .note-input { 
+            width: 100%; 
+            padding: 0.75rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            font-family: inherit; 
+            font-size: 0.95rem; 
+            display: none; /* Hidden by default */
+        }
+        
+        .cc-section .notes-container { 
+            min-height: 50px; 
+            display: none; /* Hidden by default */
+        }
+
+        .sticky-note { background-color: #fff; border: 1px solid #e0e0e0; border-left: 3px solid #f97316; border-radius: 4px; padding: 0.75rem; font-size: 0.95rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; word-break: break-word; }
+        .delete-note-btn { background: none; border: none; color: #d1d5db; cursor: pointer; font-size: 1.2rem; font-weight: bold; padding: 0 0.5rem; opacity: 0; transition: opacity 0.2s, color 0.2s; }
+        .sticky-note:hover .delete-note-btn { opacity: 1; }
+        .delete-note-btn:hover { color: var(--danger-red); }
+        
+        /* --- MODIFICATION: Submit Area --- */
+        .cc-submit-area {
+            margin-top: 2rem;
+            padding: 2rem;
+            background-color: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        /* --- AI Sidebar --- */
+        .ai-sidebar { 
+            width: 300px; 
+            flex-shrink: 0; 
+            background-color: var(--white); 
+            border-radius: 8px; 
+            padding: 1rem; 
+            border: 1px solid var(--border-color);
+        }
+        .ai-sidebar h3 { font-size: 1.1rem; margin: 0 0 1rem 0; text-align: center; }
+        .ai-prompt { background-color: #f3f4f6; padding: 1rem; border-radius: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .ai-prompt.flash { animation: flash-background 0.7s ease-out; }
+        #deeper-insight-btn {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        /* --- Toast --- */
+        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2001; }
+        .toast { background-color: var(--primary-dark); color: var(--white); padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(20px); max-width: 500px; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background-color: #22c55e; }
+        .toast.ai-prompt {
+            background-color: var(--icon-blue);
+            font-weight: 500;
+        }
+        .toast.error { background-color: var(--danger-red); }
+
+        /* --- Media Queries --- */
+        @media (max-width: 992px) { 
+            .sticky-header-layout { flex-direction: column; } 
+            .ai-sidebar { width: 100%; } 
+        }
+        @media (max-width: 600px) { .cc-quadrant-grid { grid-template-columns: 1fr; } }
+
+    </style>
+</head>
+<body>
+    <div id="industry-selector-modal">
+        <div class="modal-content">
+            <div class="cc-logo">
+                <div class="cc-logo-icon">
+                    <div class="cc-icon-bar"></div>
+                    <div class="cc-icon-blocks">
+                        <div class="cc-icon-block"></div>
+                        <div class="cc-icon-block"></div>
+                        <div class="cc-icon-block"></div>
+                    </div>
+                </div>
+                <div class="cc-logo-text"><p class="cc-logo-title">Business Builders</p></div>
+            </div>
+            
+            <h1>Start with your Customer</h1>
+            <p class="positioning-statement">The Customer Compass helps you see your business through your customer’s eyes. It uncovers what they think, feel, do, and value - and what frustrates them most. These insights show you how to shape offers and messages that truly connect. Together, we’ll use that clarity to craft better offers and sharper strategies.</p>
+            <label for="industry-select" style="display: block; margin-bottom: 0.5rem; text-align: left; font-weight: 700;">Select your Industry:</label>
+            <select id="industry-select">
+                <option value="Construction & Trades">Construction & Trades</option>
+                <option value="Retail">Retail</option>
+                <option value="Tourism & Hospitality">Tourism & Hospitality</option>
+                <option value="Health & Wellbeing">Health & Wellbeing</option>
+                <option value="Education & Training">Education & Training</option>
+                <option value="General Business">General Business</option>
+            </select>
+            <button id="start-mapping-btn" class="cc-btn btn-primary">Start Mapping</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <div id="app-wrapper" class="customer-compass-app" style="display: none;">
+            <div id="sticky-top-bar">
+                <div class="sticky-header-layout">
+                    <div class="header-main-content">
+                        <header class="cc-header">
+                            <div class="cc-logo"><div class="cc-logo-icon"><div class="cc-icon-bar"></div><div class="cc-icon-blocks"><div class="cc-icon-block"></div><div class="cc-icon-block"></div><div class="cc-icon-block"></div></div></div><div class="cc-logo-text"><p class="cc-logo-title">Business Builders</p></div></div>
+                        </header>
+                        <h2 class="cc-tool-title">The Customer Compass</h2>
+                        <div class="cc-toolbar">
+                            <span id="persona-name-display" class="cc-persona-name">Persona: Tradie Customer</span>
+                            <div class="cc-toolbar-actions">
+                                <button id="change-industry-btn" class="cc-btn btn-secondary">Change Industry</button>
+                                </div>
+                        </div>
+                        <div class="cc-progress-bar-container"><div id="progress-bar" class="cc-progress-bar"></div></div>
+                        <p id="progress-text" class="cc-progress-text">0 of 6 Sections Completed</p>
+                    </div>
+                    
+                    <aside class="ai-sidebar">
+                        <h3>AI Strategic Coach</h3>
+                        <div id="ai-prompt-sidebar" class="ai-prompt"></div>
+                        <button id="deeper-insight-btn" class="cc-btn">Deeper Insight 💡</button>
+                    </aside>
+                </div>
+            </div>
+
+            <main class="cc-main-content">
+                <div id="canvas-delegate" class="cc-canvas">
+                    <div class="cc-quadrant-grid">
+                        <div class="cc-section" data-section-name="Says">
+                            <h3>Says</h3><p class="guiding-question">What do my customers say out loud?</p>
+                            <div class="shadow-text-card">e.g., “I just need it fixed today!”</div>
+                            <div class="notes-container"></div>
+                            <input type="text" class="note-input" placeholder="Type your note here and press Enter..." autocomplete="off">
+                        </div>
+                        <div class="cc-section" data-section-name="Thinks">
+                            <h3>Thinks</h3><p class="guiding-question">What's really going on in my customers' minds?</p>
+                            <div class="shadow-text-card">e.g., “Are they ripping me off?”</div>
+                            <div class="notes-container"></div>
+                            <input type="text" class="note-input" placeholder="Type your note here and press Enter..." autocomplete="off">
+                        </div>
+                        <div class="cc-section" data-section-name="Does">
+                            <h3>Does</h3><p class="guiding-question">What actions do my customers take?</p>
+                            <div class="shadow-text-card">e.g., Calls 3 tradies until one answers.</div>
+                            <div class="notes-container"></div>
+                            <input type="text" class="note-input" placeholder="Type your note here and press Enter..." autocomplete="off">
+                        </div>
+                        <div class="cc-section" data-section-name="Feels">
+                            <h3>Feels</h3><p class="guiding-question">What is my customers' emotional state?</p>
+                            <div class="shadow-text-card">e.g., Hot, stressed, impatient.</div>
+                            <div class="notes-container"></div>
+                            <input type="text" class="note-input" placeholder="Type your note here and press Enter..." autocomplete="off">
+                        </div>
+                        <div class="cc-section" data-section-name="Pains">
+                            <h3>Pains</h3><p class="guiding-question">What are my customers' biggest frustrations?</p>
+                            <div class="shadow-text-card">e.g., Complains about wait times.</div>
+                            <div class="notes-container"></div>
+                            <input type="text" class="note-input" placeholder="Type your note here and press Enter..." autocomplete="off">
+                        </div>
+                        <div class="cc-section" data-section-name="Gains">
+                            <h3>Gains</h3><p class="guiding-question">What do my customers truly want to achieve?</p>
+                            <div class="shadow-text-card">e.g., Peace of mind it won't break again.</div>
+                            <div class="notes-container"></div>
+                            <input type="text" class="note-input" placeholder="Type your note here and press Enter..." autocomplete="off">
+                        </div>
+                    </div>
+                    
+                    <div class="cc-submit-area">
+                        <button id="submit-compass-btn" class="cc-btn btn-primary" disabled>Submit for $49 Playbook</button>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+    <div id="toast-container"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const { jsPDF } = window.jspdf;
+            
+            let config = {};
+            async function fetchConfig() {
+                try {
+                    const response = await fetch('resources.json?v=' + new Date().getTime()); 
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    config = await response.json();
+                    
+                    // MODIFICATION: Only checks for the one webhook it needs
+                    if (!config.compassSubmitWebhookUrl) {
+                        console.error('Configuration error: Missing compassSubmitWebhookUrl.');
+                        throw new Error('Missing webhook configuration.');
+                    }
+                    console.log('App config loaded successfully.');
+                } catch (error) {
+                    console.error('Fatal Error: Could not load app configuration.', error);
+                    const modalContent = document.querySelector('#industry-selector-modal .modal-content');
+                    if (modalContent) {
+                        modalContent.innerHTML = `<h1>Application Error</h1><p style="color: var(--danger-red);">Could not load app configuration. Please check your internet connection and refresh the page.</p>`;
+                    }
+                }
+            }
+            
+            // --- Data Structures ---
+            const notes = { Says: '', Thinks: '', Does: '', Feels: '', Pains: '', Gains: '' };
+            let state = {
+                currentIndustry: '',
+                activeSection: 'default'
+            };
+            
+            const industryData = {
+                'Construction & Trades': {
+                    persona: 'Tradie Customer',
+                    examples: {
+                        Says: 'e.g., “I just need it fixed today!”',
+                        Thinks: 'e.g., “Are they ripping me off? This is going to be expensive.”',
+                        Does: 'e.g., Calls 3 tradies until one answers.',
+                        Feels: 'e.g., Stressed, impatient, anxious about cost.',
+                        Pains: 'e.g., Taking time off work, unexpected costs, unreliable arrival times.',
+                        Gains: 'e.g., Peace of mind it won\'t break again. A fair price.'
+                    }
+                },
+                'Retail': {
+                    persona: 'Retail Shopper',
+                    examples: {
+                        Says: 'e.g., “Do you have this in a different size?”',
+                        Thinks: 'e.g., “I can probably find this cheaper online.”',
+                        Does: 'e.g., Scans barcode with phone, checks reviews.',
+                        Feels: 'e.g., Indecisive, overwhelmed by choice, looking for a deal.',
+                        Pains: 'e.g., Can\'t find staff, long checkout lines, poor return policy.',
+                        Gains: 'e.g., Feeling confident in the purchase, getting a good value.'
+                    }
+                },
+                'Tourism & Hospitality': {
+                    persona: 'Cafe Customer',
+                    examples: {
+                        Says: 'e.g., “What\'s the wifi password?”',
+                        Thinks: 'e.g., “I hope this coffee is as good as the reviews.”',
+                        Does: 'e.g., Takes a photo of their food before eating.',
+                        Feels: 'e.g., Relaxed, looking for a treat, hurried (if commuting).',
+                        Pains: 'e.g., Noisy environment, cold coffee, no available seats.',
+                        Gains: 'e.g., A relaxing 15-minute break, a delicious coffee.'
+                    }
+                },
+                'Health & Wellbeing': {
+                    persona: 'Gym Member',
+                    examples: {
+                        Says: 'e.g., “How do I use this machine?”',
+                        Thinks: 'e.g., “Everyone else here looks so fit, I feel out of place.”',
+                        Does: 'e.g., Wipes down equipment, checks phone between sets.',
+                        Feels: 'e.g., Intimidated, motivated, tired, self-conscious.',
+                        Pains: 'e.g., Crowded gym, broken equipment, feeling judged.',
+                        Gains: 'e.g., Feeling stronger, reducing stress, achieving a health goal.'
+                    }
+                },
+                 'Education & Training': {
+                    persona: 'Online Student',
+                    examples: {
+                        Says: 'e.g., “When is the next assignment due?”',
+                        Thinks: 'e.g., “Am I the only one who doesn\'t understand this module?”',
+                        Does: 'e.g., Watches videos at 1.5x speed, posts in the forum.',
+                        Feels: 'e.g., Isolated, overwhelmed, curious, pressured by deadlines.',
+                        Pains: 'e.g., Confusing instructions, lack of instructor feedback, tech issues.',
+                        Gains: 'e.g., Earning a certificate, mastering a new skill, career advancement.'
+                    }
+                },
+                'General Business': {
+                    persona: 'General Customer',
+                    examples: {
+                        Says: 'e.g., “What are your opening hours?”',
+                        Thinks: 'e.g., “Is this company trustworthy?”',
+                        Does: 'e.g., Checks Google reviews before contacting.',
+                        Feels: 'e.g., Cautious, hopeful, searching for a solution.',
+                        Pains: 'e.g., Hard-to-navigate website, poor customer service, unclear pricing.',
+                        Gains: 'e.g., A simple, clear solution to their problem.'
+                    }
+                }
+            };
+            
+            const promptLibrary = {
+                'default': {
+                    baseline: "Let's map your {industry} customer. Add your first note to any section to get started.",
+                    extension: "Great start! Keep adding notes to build a complete picture."
+                },
+                'Says': {
+                    baseline: "What do your {industry} customers *say out loud*? Think about direct quotes, questions, and complaints you hear.",
+                    extension: "You noted '{note}'. What tone of voice do they use when they say that? Is it angry, curious, or something else?"
+                },
+                'Thinks': {
+                    baseline: "What's *really* on their mind? What are the secret thoughts, worries, or assumptions they *don't* say?",
+                    extension: "Interesting that they think 'X'. What assumption or past experience might be driving that secret thought?"
+                },
+                'Does': {
+                    baseline: "What actions do they take? Observe their behavior before, during, and after they interact with you. What do they *do*?",
+                    extension: "They 'X'. What do they do right before or right after that action? Is there a pattern?"
+                },
+                'Feels': {
+                    baseline: "What is their emotional state? Try to use single, powerful adjectives. Are they stressed, happy, confused, impatient?",
+                    extension: "You said they feel 'X'. What is the #1 trigger for that specific emotion? What happens just before they feel that way?"
+                },
+                'Pains': {
+                    baseline: "What are their biggest frustrations, fears, or obstacles? What's standing in their way?",
+                    extension: "That's a key pain point. On a scale of 1-10, how much does 'X' *really* bother them?"
+                },
+                'Gains': {
+                    baseline: "What do they *truly* want to achieve? What does success or a perfect outcome look like for them? This is more than just 'buy a product'.",
+                    extension: "You noted the gain is 'X'. If they achieved that, what deeper, more emotional need would be met? (e.g., 'respect', 'security', 'peace of mind')"
+                },
+                'firstStep': {
+                    baseline: "Great start! Keep adding notes to build a complete picture of your customer's experience.",
+                    extension: "That's a good first note!"
+                },
+                'halfway': {
+                    baseline: "You're building a clear picture. The most powerful insights often come from the gap between what customers SAY and what they actually DO or THINK.",
+                    extension: "You're doing great!"
+                },
+                'complete': {
+                    // MODIFICATION: Prompt changed to point to the submit button
+                    baseline: "Excellent! All sections are complete. You can now submit your compass for your full $49 Playbook.",
+                    extension: "All sections complete!"
+                }
+                // 'insightsGenerated' prompt removed as it's no longer used
+            };
+
+            // --- DOM ELEMENTS ---
+            const appWrapper = document.getElementById('app-wrapper');
+            const industryModal = document.getElementById('industry-selector-modal');
+            const startMappingBtn = document.getElementById('start-mapping-btn');
+            const industrySelect = document.getElementById('industry-select');
+            
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const aiPromptSidebar = document.getElementById('ai-prompt-sidebar');
+            const deeperInsightBtn = document.getElementById('deeper-insight-btn');
+            const quadrantGrid = document.querySelector('.cc-quadrant-grid');
+            
+            // MODIFICATION: 'Generate Insights' button removed
+            const submitCompassBtn = document.getElementById('submit-compass-btn'); // New button
+            
+            const changeIndustryBtn = document.getElementById('change-industry-btn');
+            const personaNameDisplay = document.getElementById('persona-name-display');
+            
+            // MODIFICATION: 'Insights Section' elements removed
+            
+            // --- RENDER & VIEW LOGIC ---
+            const updateSectionView = (sectionName) => {
+                const sectionEl = document.querySelector(`.cc-section[data-section-name="${sectionName}"]`);
+                if (!sectionEl) return;
+                
+                const container = sectionEl.querySelector('.notes-container');
+                const inputEl = sectionEl.querySelector('.note-input');
+                const shadowCardEl = sectionEl.querySelector('.shadow-text-card');
+                const noteText = notes[sectionName];
+
+                container.innerHTML = '';
+                
+                if (noteText) {
+                    const note = document.createElement('div');
+                    note.className = 'sticky-note';
+                    note.innerHTML = `<span>${textToHtml(noteText)}</span><button class="delete-note-btn">&times;</button>`;
+                    container.appendChild(note);
+                    container.style.display = 'block';
+                    inputEl.style.display = 'none';
+                    shadowCardEl.style.display = 'none';
+                } else {
+                    container.style.display = 'none';
+                    inputEl.style.display = 'none';
+                    shadowCardEl.style.display = 'block';
+                    inputEl.value = ''; 
+                }
+            };
+
+            // --- EVENT HANDLING ---
+            startMappingBtn.addEventListener('click', () => {
+                const selectedIndustry = industrySelect.value;
+                initApp(selectedIndustry);
+            });
+            
+            changeIndustryBtn.addEventListener('click', () => {
+                appWrapper.style.display = 'none';
+                industryModal.style.display = 'flex';
+            });
+            
+            quadrantGrid.addEventListener('click', (e) => {
+                if (e.target.matches('.shadow-text-card')) {
+                    const sectionEl = e.target.closest('.cc-section');
+                    const inputEl = sectionEl.querySelector('.note-input');
+                    e.target.style.display = 'none'; 
+                    inputEl.style.display = 'block'; 
+                    inputEl.focus();
+                    setAiPrompt(sectionEl.dataset.sectionName);
+                }
+                if (e.target.matches('.delete-note-btn')) {
+                    const sectionEl = e.target.closest('.cc-section');
+                    const sectionName = sectionEl.dataset.sectionName;
+                    notes[sectionName] = '';
+                    updateSectionView(sectionName);
+                    updateProgress();
+                }
+            });
+            
+            quadrantGrid.addEventListener('keydown', (e) => {
+                if (e.target.matches('.note-input') && e.key === 'Enter') {
+                    e.preventDefault();
+                    const input = e.target;
+                    const text = input.value.trim();
+                    const sectionName = input.closest('.cc-section').dataset.sectionName;
+                    
+                    if (text) {
+                        notes[sectionName] = text;
+                        updateSectionView(sectionName);
+                        updateProgress();
+                        
+                        const promptConfig = promptLibrary[sectionName] || promptLibrary.default;
+                        let extensionPrompt = promptConfig.extension;
+                        extensionPrompt = extensionPrompt.replace('{note}', textToHtml(text)).replace('X', textToHtml(text));
+                        showToast(`💡 ${extensionPrompt}`, 'ai-prompt', 10000);
+                    }
+                }
+            });
+            
+            quadrantGrid.addEventListener('focusin', (e) => {
+                 if (e.target.matches('.note-input')) {
+                     const sectionName = e.target.closest('.cc-section').dataset.sectionName;
+                     setAiPrompt(sectionName);
+                 }
+            });
+            
+            deeperInsightBtn.addEventListener('click', () => {
+                const sectionName = state.activeSection;
+                const noteText = notes[sectionName];
+                
+                if (promptLibrary[sectionName] && noteText) {
+                    let extensionPrompt = promptLibrary[sectionName].extension;
+                    extensionPrompt = extensionPrompt.replace('{note}', textToHtml(noteText)).replace('X', textToHtml(noteText));
+                    showToast(`💡 ${extensionPrompt}`, 'ai-prompt', 10000);
+                } else if (promptLibrary[sectionName]) {
+                    showToast("Add a note to this section first to get a deeper insight.");
+                } else {
+                    showToast("Click on a card to get started.");
+                }
+            });
+
+            // MODIFICATION: 'Generate Insights' button listener removed
+            
+            // MODIFICATION: 'Save & Finish' button repurposed as the main submit button
+            submitCompassBtn.addEventListener('click', async () => {
+                
+                // 1. Get user data from localStorage (saved by PWA)
+                const userName = localStorage.getItem('user_name') || 'Unknown';
+                const userEmail = localStorage.getItem('user_email') || 'Unknown';
+                const businessName = localStorage.getItem('business_name') || 'Unknown';
+
+                // 2. Prepare payload
+                const payload = {
+                    timestamp: new Date().toISOString(),
+                    type: "Customer Compass Submission ($49)",
+                    name: userName,
+                    email: userEmail,
+                    businessName: businessName,
+                    industry: state.currentIndustry || 'Unknown',
+                    persona: document.getElementById('persona-name-display')?.innerText || '',
+                    notes: notes // The 6 notes
+                };
+
+                // 3. Send data to the single webhook
+                await sendCompassDataToZapier(payload);
+            });
+            
+            // --- AI & PROGRESS LOGIC ---
+            
+            // This function now sends the data to your ...urq07sa/ webhook
+            async function sendCompassDataToZapier(payload) {
+                if (!config.compassSubmitWebhookUrl) {
+                    showToast("Error: Save configuration not loaded. Please refresh.", 4000, "error");
+                    return;
+                }
+
+                showToast("Submitting your data...", 3000);
+                submitCompassBtn.disabled = true;
+                submitCompassBtn.textContent = "Submitting...";
+
+                try {
+                    const response = await fetch(config.compassSubmitWebhookUrl, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
+
+                    // Success!
+                    showToast("✅ Success! We'll email your $49 Playbook within 24 hours.", 'success', 8000);
+                    submitCompassBtn.textContent = "Submitted Successfully!";
+                    // You could redirect here, e.g.:
+                    // setTimeout(() => { window.location.href = 'https://your-website.com/thank-you'; }, 2000);
+
+                } catch (error) {
+                    console.error('Failed to save Compass data:', error);
+                    showToast("Error submitting data. Please try again.", 4000, "error");
+                    submitCompassBtn.disabled = false;
+                    submitCompassBtn.textContent = "Submit for $49 Playbook";
+                }
+            }
+            
+            const showToast = (message, type = '', duration = 5000) => {
+                const container = document.getElementById('toast-container');
+                if (!container) return;
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                if(type) toast.classList.add(type);
+                toast.innerHTML = message; 
+                container.appendChild(toast);
+                setTimeout(() => { toast.classList.add('show'); }, 100);
+                setTimeout(() => { toast.classList.remove('show'); setTimeout(() => { toast.remove(); }, 500); }, duration);
+            };
+
+            const setAiPrompt = (sectionName) => {
+                if (state.activeSection === sectionName) return; 
+                
+                state.activeSection = sectionName;
+                const promptConfig = promptLibrary[sectionName] || promptLibrary.default;
+                const promptMessage = promptConfig.baseline.replace('{industry}', industryData[state.currentIndustry]?.persona || 'customer');
+                
+                aiPromptSidebar.innerHTML = promptMessage;
+                aiPromptSidebar.classList.remove('flash');
+                void aiPromptSidebar.offsetWidth; 
+                aiPromptSidebar.classList.add('flash');
+            };
+            
+            const updateProgress = () => {
+                const totalSections = 6;
+                const completedSections = Object.values(notes).filter(note => note.trim() !== '').length;
+
+                progressBar.style.width = `${(completedSections / totalSections) * 100}%`;
+                progressText.textContent = `${completedSections} of ${totalSections} Sections Completed`;
+                
+                let newStateKey = 'default';
+                if (completedSections >= totalSections) {
+                    newStateKey = 'complete';
+                    // MODIFICATION: Enable the submit button
+                    submitCompassBtn.disabled = false;
+                } else {
+                    // MODIFICATION: Keep submit button disabled
+                    submitCompassBtn.disabled = true;
+                    if (completedSections >= totalSections / 2) { newStateKey = 'halfway';
+                    } else if (completedSections >= 1) { newStateKey = 'firstStep'; }
+                }
+                
+                if (document.activeElement.matches('.note-input') === false) {
+                     setAiPrompt(newStateKey);
+                }
+            };
+            
+            const textToHtml = (text) => { 
+                if (typeof text !== 'string') return ''; 
+                const el = document.createElement('div'); 
+                el.innerText = text; 
+                return el.innerHTML; 
+            }
+            
+            const initApp = (industryKey) => {
+                state.currentIndustry = industryKey;
+                const industry = industryData[industryKey];
+                
+                personaNameDisplay.textContent = `Persona: ${industry.persona}`;
+                
+                document.querySelectorAll('.cc-section').forEach(sectionEl => {
+                    const sectionName = sectionEl.dataset.sectionName;
+                    const shadowCard = sectionEl.querySelector('.shadow-text-card');
+                    if (industry.examples[sectionName]) {
+                        shadowCard.textContent = industry.examples[sectionName];
+                    }
+                });
+                
+                Object.keys(notes).forEach(key => { notes[key] = ''; });
+                
+                document.querySelectorAll('.cc-section').forEach(el => {
+                    updateSectionView(el.dataset.sectionName);
+                });
+                
+                updateProgress();
+                
+                appWrapper.style.display = 'block';
+                industryModal.style.display = 'none';
+            }
+
+            // --- INITIALIZATION ---
+            fetchConfig().then(() => {
+                industryModal.style.display = 'flex';
+            });
+        });
+    </script>
+</body>
+</html>
